@@ -14,7 +14,8 @@ sources = [
   'src/la.c',
   'src/config.c',
   'src/navigation.c',
-  'src/screenshot.c'
+  'src/screenshot.c',
+  'src/render.c'
 ]
 
 executable('boomer',
