@@ -254,6 +254,11 @@ const char* frag_src = "#version 130\n"
 "        length(cursor - gl_FragCoord) < (flRadius * cameraScale) ? 0.0 : flShadow);\n"
 "}\n";
 
+void version_quit() {
+    printf("boomer-dfd4e1f5\n");
+    exit(0);
+}
+
 int main(int argc, char** argv) {
     float delay_sec = 0.0f;
     bool windowed = false;
@@ -271,6 +276,8 @@ int main(int argc, char** argv) {
             windowed = true;
         } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             usage_quit();
+        } else if (strcmp(argv[i], "-V") == 0 || strcmp(argv[i], "--version") == 0) {
+            version_quit();
         } else if (strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--config") == 0) {
              if (i + 1 < argc) {
                 config_file = argv[++i];
@@ -279,6 +286,25 @@ int main(int argc, char** argv) {
             }
         } else if (strcmp(argv[i], "--select") == 0) {
             select_mode = true;
+        } else if (strcmp(argv[i], "--new-config") == 0) {
+            char* new_config_path = "config";
+            if (i + 1 < argc && argv[i+1][0] != '-') {
+                new_config_path = argv[++i];
+            }
+            if (access(new_config_path, F_OK) == 0) {
+                printf("File %s already exists. Replace it? [yn] ", new_config_path);
+                char answer = (char)getchar();
+                if (answer != 'y') {
+                    printf("Disaster prevented\n");
+                    exit(1);
+                }
+            }
+            generate_default_config(new_config_path);
+            printf("Generated config at %s\n", new_config_path);
+            exit(0);
+        } else {
+            fprintf(stderr, "Unknown flag `%s`\n", argv[i]);
+            usage_quit();
         }
     }
 
@@ -433,12 +459,20 @@ int main(int argc, char** argv) {
                         camera.velocity = vec2(0.0f, 0.0f);
                     }
                     if (key == XK_equal) {
-                        camera.delta_scale += config.scroll_speed;
-                        camera.scale_pivot = mouse.curr;
+                        if ((xev.xkey.state & ControlMask) && flashlight.is_enabled) {
+                            flashlight.delta_radius += INITIAL_FL_DELTA_RADIUS;
+                        } else {
+                            camera.delta_scale += config.scroll_speed;
+                            camera.scale_pivot = mouse.curr;
+                        }
                     }
                     if (key == XK_minus) {
-                        camera.delta_scale -= config.scroll_speed;
-                        camera.scale_pivot = mouse.curr;
+                        if ((xev.xkey.state & ControlMask) && flashlight.is_enabled) {
+                            flashlight.delta_radius -= INITIAL_FL_DELTA_RADIUS;
+                        } else {
+                            camera.delta_scale -= config.scroll_speed;
+                            camera.scale_pivot = mouse.curr;
+                        }
                     }
                     break;
                 }
@@ -448,12 +482,20 @@ int main(int argc, char** argv) {
                         camera.velocity = vec2(0.0f, 0.0f);
                     }
                     if (xev.xbutton.button == Button4) {
-                        camera.delta_scale += config.scroll_speed;
-                        camera.scale_pivot = mouse.curr;
+                        if ((xev.xbutton.state & ControlMask) && flashlight.is_enabled) {
+                            flashlight.delta_radius -= INITIAL_FL_DELTA_RADIUS;
+                        } else {
+                            camera.delta_scale += config.scroll_speed;
+                            camera.scale_pivot = mouse.curr;
+                        }
                     }
                     if (xev.xbutton.button == Button5) {
-                        camera.delta_scale -= config.scroll_speed;
-                        camera.scale_pivot = mouse.curr;
+                        if ((xev.xbutton.state & ControlMask) && flashlight.is_enabled) {
+                            flashlight.delta_radius += INITIAL_FL_DELTA_RADIUS;
+                        } else {
+                            camera.delta_scale -= config.scroll_speed;
+                            camera.scale_pivot = mouse.curr;
+                        }
                     }
                     break;
                 case ButtonRelease:
